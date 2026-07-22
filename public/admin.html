@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nova AI · 账号管理</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
+        body {
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            min-height: 100vh;
+            background: #f0f2f5;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .container {
+            background: white;
+            max-width: 520px;
+            width: 100%;
+            border-radius: 16px;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.12);
+            padding: 30px 28px;
+            transition: 0.3s;
+        }
+        h1 {
+            text-align: center;
+            font-size: 26px;
+            font-weight: 600;
+            color: #1a1a2e;
+            margin-bottom: 4px;
+        }
+        h1 span { color: #4fc3f7; }
+        .sub { text-align: center; color: #888; font-size: 14px; margin-bottom: 20px; }
+        .form-group { margin-bottom: 14px; }
+        .form-group label { display: block; font-weight: 500; margin-bottom: 4px; color: #333; font-size: 14px; }
+        .form-group input {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid #d0d7de;
+            border-radius: 8px;
+            font-size: 15px;
+            background: #f9fafb;
+            transition: 0.2s;
+        }
+        .form-group input:focus {
+            border-color: #4fc3f7;
+            outline: none;
+            background: white;
+            box-shadow: 0 0 0 3px rgba(79,195,247,0.2);
+        }
+        .btn {
+            width: 100%;
+            padding: 11px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.2s;
+            margin-top: 4px;
+        }
+        .btn-primary { background: #4fc3f7; color: white; }
+        .btn-primary:hover { background: #29b6f6; }
+        .btn-secondary { background: #e9ecef; color: #333; }
+        .btn-secondary:hover { background: #dee2e6; }
+        .btn-danger { background: #ef5350; color: white; }
+        .btn-danger:hover { background: #d32f2f; }
+        .btn-sm {
+            padding: 6px 14px;
+            font-size: 13px;
+            width: auto;
+            display: inline-block;
+            margin: 2px;
+        }
+        .action-row { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; margin-top: 10px; }
+        .status {
+            text-align: center;
+            font-size: 14px;
+            margin: 10px 0;
+            min-height: 22px;
+            color: #4caf50;
+        }
+        .status.error { color: #ef5350; }
+        .hidden { display: none !important; }
+        .card {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 12px 16px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border: 1px solid #e9ecef;
+        }
+        .card-info { font-weight: 500; }
+        .card-actions .btn-sm { margin: 0 4px; }
+        .admin-badge {
+            background: #ffd93d;
+            color: #1a1a2e;
+            font-size: 11px;
+            padding: 2px 10px;
+            border-radius: 20px;
+            font-weight: 600;
+            margin-left: 8px;
+        }
+        .footer-text { text-align: center; font-size: 12px; color: #aaa; margin-top: 16px; }
+        .flex-center { display: flex; justify-content: center; gap: 12px; flex-wrap: wrap; }
+        .api-status {
+            font-size: 12px;
+            color: #888;
+            text-align: center;
+            margin-bottom: 12px;
+            padding: 6px;
+            background: #f5f5f5;
+            border-radius: 6px;
+        }
+        @media (max-width: 480px) {
+            .container { padding: 20px 16px; }
+            .card { flex-direction: column; align-items: stretch; gap: 8px; }
+            .card-actions { display: flex; justify-content: center; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container" id="app">
+    <!-- ====== 登录界面 ====== -->
+    <div id="loginPanel">
+        <h1>🔐 <span>Nova AI</span></h1>
+        <div class="sub">账号管理中心</div>
+        <div class="api-status" id="apiStatus">🟢 已连接到服务器</div>
+        <div class="form-group">
+            <label>用户名</label>
+            <input type="text" id="loginUser" placeholder="输入用户名">
+        </div>
+        <div class="form-group">
+            <label>密码</label>
+            <input type="password" id="loginPass" placeholder="输入密码">
+        </div>
+        <button class="btn btn-primary" id="loginBtn">登录</button>
+        <div style="text-align:center; margin-top:12px;">
+            <span style="color:#888;">还没有账号？</span>
+            <a href="#" id="goRegister" style="color:#4fc3f7; text-decoration:none; font-weight:500;">立即注册</a>
+        </div>
+        <div id="loginStatus" class="status"></div>
+    </div>
+
+    <!-- ====== 注册界面 ====== -->
+    <div id="registerPanel" class="hidden">
+        <h1>📝 <span>注册新账号</span></h1>
+        <div class="sub">创建你的 Nova AI 账号</div>
+        <div class="api-status" id="apiStatusReg">🟢 已连接到服务器</div>
+        <div class="form-group">
+            <label>用户名</label>
+            <input type="text" id="regUser" placeholder="设置用户名">
+        </div>
+        <div class="form-group">
+            <label>密码</label>
+            <input type="password" id="regPass" placeholder="设置密码">
+        </div>
+        <div class="form-group">
+            <label>确认密码</label>
+            <input type="password" id="regPass2" placeholder="再次输入密码">
+        </div>
+        <button class="btn btn-primary" id="registerBtn">注册</button>
+        <div style="text-align:center; margin-top:12px;">
+            <span style="color:#888;">已有账号？</span>
+            <a href="#" id="goLogin" style="color:#4fc3f7; text-decoration:none; font-weight:500;">去登录</a>
+        </div>
+        <div id="regStatus" class="status"></div>
+    </div>
+
+    <!-- ====== 管理面板 ====== -->
+    <div id="adminPanel" class="hidden">
+        <h1>👋 <span>Nova AI</span></h1>
+        <div class="sub" id="welcomeUser">欢迎你，管理员</div>
+        <hr style="margin:12px 0; border-color:#eee;">
+        <div style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:14px;">
+            <button class="btn btn-secondary btn-sm" id="addUserBtn">➕ 添加账号</button>
+            <button class="btn btn-secondary btn-sm" id="refreshBtn">🔄 刷新列表</button>
+            <button class="btn btn-secondary btn-sm" id="logoutBtn">🚪 退出登录</button>
+        </div>
+        <div id="userListContainer"></div>
+        <div id="adminStatus" class="status"></div>
+        <div class="footer-text">📁 数据存储在服务器端 (txt 文件) • 管理员硬编码</div>
+    </div>
+</div>
+
+<script>
+(function() {
+    // ============================================================
+    // 1. 配置
+    // ============================================================
+    // 如果部署到 Netlify，使用你的域名；本地测试用 localhost:3000
+    // 请根据实际情况修改：
+    const API_BASE = window.location.origin;  // 自动适配当前域名
+    // 例如：如果部署到 https://nova-auth-server.netlify.app，API_BASE 就是它
+
+    // ============================================================
+    // 2. 工具函数
+    // ============================================================
+    async function apiCall(endpoint, data) {
+        const url = API_BASE + endpoint;
+        const options = {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        };
+        const resp = await fetch(url, options);
+        return await resp.json();
+    }
+
+    async function apiGet(endpoint) {
+        const url = API_BASE + endpoint;
+        const resp = await fetch(url);
+        return await resp.json();
+    }
+
+    // ============================================================
+    // 3. DOM 引用
+    // ============================================================
+    const loginPanel = document.getElementById('loginPanel');
+    const registerPanel = document.getElementById('registerPanel');
+    const adminPanel = document.getElementById('adminPanel');
+
+    const loginUser = document.getElementById('loginUser');
+    const loginPass = document.getElementById('loginPass');
+    const loginStatus = document.getElementById('loginStatus');
+
+    const regUser = document.getElementById('regUser');
+    const regPass = document.getElementById('regPass');
+    const regPass2 = document.getElementById('regPass2');
+    const regStatus = document.getElementById('regStatus');
+
+    const welcomeUser = document.getElementById('welcomeUser');
+    const userListContainer = document.getElementById('userListContainer');
+    const adminStatus = document.getElementById('adminStatus');
+
+    // 当前用户
+    let currentUser = null;
+
+    // ============================================================
+    // 4. 面板切换
+    // ============================================================
+    function showLogin() {
+        loginPanel.classList.remove('hidden');
+        registerPanel.classList.add('hidden');
+        adminPanel.classList.add('hidden');
+        loginStatus.textContent = '';
+        loginStatus.className = 'status';
+        document.getElementById('apiStatus').textContent = '🟢 已连接到服务器';
+    }
+    function showRegister() {
+        loginPanel.classList.add('hidden');
+        registerPanel.classList.remove('hidden');
+        adminPanel.classList.add('hidden');
+        regStatus.textContent = '';
+        regStatus.className = 'status';
+        document.getElementById('apiStatusReg').textContent = '🟢 已连接到服务器';
+    }
+    function showAdmin(user) {
+        loginPanel.classList.add('hidden');
+        registerPanel.classList.add('hidden');
+        adminPanel.classList.remove('hidden');
+        welcomeUser.textContent = `欢迎你，${user.username}`;
+        renderUserList();
+        adminStatus.textContent = '';
+        adminStatus.className = 'status';
+    }
+
+    // ============================================================
+    // 5. 渲染用户列表
+    // ============================================================
+    async function renderUserList() {
+        try {
+            const data = await apiGet('/api/users');
+            let html = '';
+            if (data.length === 0) {
+                html = '<div style="color:#888; text-align:center; padding:20px;">暂无普通用户</div>';
+            } else {
+                data.forEach(u => {
+                    html += `
+                        <div class="card" data-username="${u.username}">
+                            <div class="card-info">
+                                ${u.username}
+                            </div>
+                            <div class="card-actions">
+                                <button class="btn btn-secondary btn-sm change-pass-btn" data-username="${u.username}">修改密码</button>
+                                <button class="btn btn-danger btn-sm delete-btn" data-username="${u.username}">删除</button>
+                            </div>
+                        </div>
+                    `;
+                });
+            }
+            // 添加管理员卡片（硬编码）
+            html += `
+                <div class="card" style="background:#fff8e1; border-color:#ffd93d;">
+                    <div class="card-info">
+                        👑 阿颜棒球 <span class="admin-badge">管理员</span>
+                        <span style="font-size:12px;color:#888;margin-left:8px;">(硬编码)</span>
+                    </div>
+                    <div class="card-actions">
+                        <span style="font-size:12px;color:#aaa;">不可修改</span>
+                    </div>
+                </div>
+            `;
+            userListContainer.innerHTML = html;
+
+            // 绑定事件
+            document.querySelectorAll('.delete-btn').forEach(btn => {
+                btn.addEventListener('click', async function() {
+                    const username = this.dataset.username;
+                    if (!confirm(`确定要删除用户“${username}”吗？`)) return;
+                    const result = await apiCall('/api/delete', { username });
+                    if (result.success) {
+                        adminStatus.textContent = `✅ ${result.message}`;
+                        adminStatus.className = 'status';
+                        renderUserList();
+                    } else {
+                        adminStatus.textContent = `❌ ${result.message}`;
+                        adminStatus.className = 'status error';
+                    }
+                });
+            });
+
+            document.querySelectorAll('.change-pass-btn').forEach(btn => {
+                btn.addEventListener('click', async function() {
+                    const username = this.dataset.username;
+                    const oldPass = prompt(`请输入“${username}”的当前密码：`);
+                    if (oldPass === null) return;
+                    const newPass = prompt(`请输入新密码：`);
+                    if (newPass === null) return;
+                    const confirmPass = prompt(`请再次输入新密码：`);
+                    if (confirmPass === null) return;
+                    if (newPass !== confirmPass) {
+                        adminStatus.textContent = '❌ 两次密码不一致';
+                        adminStatus.className = 'status error';
+                        return;
+                    }
+                    const result = await apiCall('/api/change-password', {
+                        username,
+                        oldPassword: oldPass,
+                        newPassword: newPass
+                    });
+                    if (result.success) {
+                        adminStatus.textContent = `✅ ${result.message}`;
+                        adminStatus.className = 'status';
+                        renderUserList();
+                    } else {
+                        adminStatus.textContent = `❌ ${result.message}`;
+                        adminStatus.className = 'status error';
+                    }
+                });
+            });
+        } catch (e) {
+            adminStatus.textContent = '❌ 加载用户列表失败，请检查网络';
+            adminStatus.className = 'status error';
+        }
+    }
+
+    // ============================================================
+    // 6. 登录
+    // ============================================================
+    document.getElementById('loginBtn').addEventListener('click', async function() {
+        const username = loginUser.value.trim();
+        const password = loginPass.value.trim();
+        if (!username || !password) {
+            loginStatus.textContent = '⚠️ 请输入用户名和密码';
+            loginStatus.className = 'status error';
+            return;
+        }
+        try {
+            const result = await apiCall('/api/login', { username, password });
+            if (result.success) {
+                currentUser = { username, role: result.role || 'user' };
+                loginStatus.textContent = '';
+                loginStatus.className = 'status';
+                showAdmin(currentUser);
+            } else {
+                loginStatus.textContent = `❌ ${result.message}`;
+                loginStatus.className = 'status error';
+            }
+        } catch (e) {
+            loginStatus.textContent = '❌ 网络错误，请检查服务器是否运行';
+            loginStatus.className = 'status error';
+            document.getElementById('apiStatus').textContent = '🔴 无法连接服务器';
+        }
+    });
+
+    // 回车登录
+    loginPass.addEventListener('keydown', e => { if (e.key === 'Enter') document.getElementById('loginBtn').click(); });
+    loginUser.addEventListener('keydown', e => { if (e.key === 'Enter') document.getElementById('loginBtn').click(); });
+
+    // ============================================================
+    // 7. 注册
+    // ============================================================
+    document.getElementById('registerBtn').addEventListener('click', async function() {
+        const username = regUser.value.trim();
+        const password = regPass.value.trim();
+        const password2 = regPass2.value.trim();
+        if (!username || !password || !password2) {
+            regStatus.textContent = '⚠️ 请填写完整';
+            regStatus.className = 'status error';
+            return;
+        }
+        if (password !== password2) {
+            regStatus.textContent = '⚠️ 两次密码不一致';
+            regStatus.className = 'status error';
+            return;
+        }
+        try {
+            const result = await apiCall('/api/register', { username, password });
+            if (result.success) {
+                regStatus.textContent = `✅ ${result.message}`;
+                regStatus.className = 'status';
+                regUser.value = '';
+                regPass.value = '';
+                regPass2.value = '';
+                setTimeout(() => showLogin(), 800);
+            } else {
+                regStatus.textContent = `❌ ${result.message}`;
+                regStatus.className = 'status error';
+            }
+        } catch (e) {
+            regStatus.textContent = '❌ 网络错误，请检查服务器';
+            regStatus.className = 'status error';
+            document.getElementById('apiStatusReg').textContent = '🔴 无法连接服务器';
+        }
+    });
+
+    // ============================================================
+    // 8. 面板切换按钮
+    // ============================================================
+    document.getElementById('goRegister').addEventListener('click', e => { e.preventDefault(); showRegister(); });
+    document.getElementById('goLogin').addEventListener('click', e => { e.preventDefault(); showLogin(); });
+
+    // ============================================================
+    // 9. 管理面板操作
+    // ============================================================
+    document.getElementById('addUserBtn').addEventListener('click', async function() {
+        const username = prompt('输入新用户名：');
+        if (username === null) return;
+        if (username.trim() === '') { adminStatus.textContent = '⚠️ 用户名不能为空'; adminStatus.className='status error'; return; }
+        const password = prompt('输入密码：');
+        if (password === null) return;
+        if (password.trim() === '') { adminStatus.textContent = '⚠️ 密码不能为空'; adminStatus.className='status error'; return; }
+        const result = await apiCall('/api/register', { username: username.trim(), password: password.trim() });
+        if (result.success) {
+            adminStatus.textContent = `✅ ${result.message}`;
+            adminStatus.className = 'status';
+            renderUserList();
+        } else {
+            adminStatus.textContent = `❌ ${result.message}`;
+            adminStatus.className = 'status error';
+        }
+    });
+
+    document.getElementById('refreshBtn').addEventListener('click', function() {
+        renderUserList();
+        adminStatus.textContent = '🔄 已刷新';
+        adminStatus.className = 'status';
+    });
+
+    document.getElementById('logoutBtn').addEventListener('click', function() {
+        if (confirm('确定要退出登录吗？')) {
+            currentUser = null;
+            loginUser.value = '';
+            loginPass.value = '';
+            showLogin();
+        }
+    });
+
+    // ============================================================
+    // 10. 安全防护
+    // ============================================================
+    document.addEventListener('contextmenu', e => { e.preventDefault(); alert('右键已被禁用。'); });
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'F12' || (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'J')) || (e.ctrlKey && e.key === 'u')) {
+            e.preventDefault();
+            alert('开发者工具已被禁用。');
+            return false;
+        }
+    });
+
+    // ============================================================
+    // 11. 初始化
+    // ============================================================
+    showLogin();
+    console.log('Nova AI 认证系统已启动 (API 模式)');
+    console.log(`API 地址: ${API_BASE}`);
+
+})();
+</script>
+</body>
+</html>
